@@ -9,6 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import tempfile
 import shutil
 import logging
+import pyautogui
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -35,6 +36,20 @@ def process_account(email, password):
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
         wait = WebDriverWait(driver, 60)
+
+        # --- Cố định kích thước và vị trí cửa sổ ---
+        window_width = 1280
+        window_height = 720
+        try:
+            logging.info(f"Setting fixed window size and position ({window_width}x{window_height} at 0,0)")
+            driver.set_window_position(0, 0)
+            driver.set_window_size(window_width, window_height)
+            # Cần import time ở đầu file nếu chưa có
+            import time 
+            time.sleep(1) # Chờ cửa sổ ổn định
+        except Exception as e:
+            logging.warning(f"Could not set window size/position: {e}")
+        # -----------------------------------------
 
         # Mở trang Sider
         driver.get("https://sider.ai/invited?c=0cc88d40d1ceb64ef5be3d4d976971b4")
@@ -131,11 +146,18 @@ def process_account(email, password):
 
         # Xử lý các bước bổ sung nếu có (dùng helper click)
         try:
+            # Tìm nút "I understand" / "Tôi hiểu" (là thẻ input)
+            understand_button_xpath = "//input[@type='submit' and (@value='Tôi hiểu' or @value='I understand')]"
+            logging.info(f"Đang tìm nút 'Tôi hiểu'/'I understand' với XPath: {understand_button_xpath}")
             understand_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//span[contains(.,'I understand')]"))
+                EC.element_to_be_clickable((By.XPATH, understand_button_xpath))
+                # Hoặc thử dùng ID nếu XPath trên không ổn định:
+                # EC.element_to_be_clickable((By.ID, "confirm"))
             )
-            click_element(understand_button, "'I understand'")
+            click_element(understand_button, "'Tôi hiểu'/'I understand'")
             
+            # Tìm nút "Continue" (vẫn có thể xuất hiện sau nút "Tôi hiểu")
+            logging.info("Đang tìm nút 'Continue'")
             continue_button = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.XPATH, "//span[contains(.,'Continue')]"))
             )
@@ -151,10 +173,36 @@ def process_account(email, password):
         driver.get("https://chromewebstore.google.com/detail/sider-chat-with-all-ai-mo/difoiogjjojoaoomphldepapgpbgkhkb?pli=1")
         # Selector cho nút "Add to Chrome" có thể khác nhau, cần kiểm tra
         # Ví dụ: //button[contains(@aria-label, 'Add to Chrome')] hoặc dựa vào text trong button/div
-        add_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Add to Chrome')] | //div[contains(., 'Add to Chrome') and @role='button']")))
+        logging.info("Đang tìm nút 'Add to Chrome'")
+        add_button_selector = "//button[contains(., 'Add to Chrome')] | //div[contains(., 'Add to Chrome') and @role='button']"
+        add_button = wait.until(EC.element_to_be_clickable((By.XPATH, add_button_selector)))
+        logging.info("Đã tìm thấy nút 'Add to Chrome'. Đang click...")
         click_element(add_button, "'Add to Chrome'")
         
-        logging.info(f"Successfully processed account: {email}")
+        # --- Sử dụng PyAutoGUI để click nút "Add extension" trong hộp thoại ---
+        logging.info("Đợi hộp thoại 'Add extension' của trình duyệt xuất hiện...")
+        time.sleep(4) # Chờ hộp thoại xuất hiện (điều chỉnh nếu cần)
+
+        # !!! QUAN TRỌNG: Bạn cần thay thế tọa độ X, Y bên dưới !!!
+        # Chạy script 1 lần, khi hộp thoại hiện ra, dùng tool/script khác
+        # để lấy tọa độ của nút "Add extension" rồi cập nhật vào đây.
+        add_extension_button_x = 784
+        add_extension_button_y = 270
+        
+        try:
+            logging.info(f"Attempting to click 'Add extension' button at ({add_extension_button_x}, {add_extension_button_y}) using pyautogui")
+            pyautogui.click(x=add_extension_button_x, y=add_extension_button_y)
+            logging.info("Clicked using pyautogui.")
+        except Exception as e:
+            logging.error(f"Failed to click using pyautogui: {e}")
+        # -------------------------------------------------------------------
+
+        # Đợi một khoảng thời gian để tiện ích cài đặt (sau khi đã click xác nhận)
+        install_wait_time = 10 # Giây
+        logging.info(f"Đợi {install_wait_time} giây để tiện ích cài đặt...")
+        time.sleep(install_wait_time)
+        
+        logging.info(f"Successfully processed account (đã cố gắng cài tiện ích): {email}")
     except Exception as e:
         logging.error(f"Error processing account {email}: {e}")
     finally:
