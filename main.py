@@ -52,7 +52,7 @@ def process_account(email, password):
         # -----------------------------------------
 
         # Mở trang Sider
-        driver.get("https://sider.ai/invited?c=0cc88d40d1ceb64ef5be3d4d976971b4")
+        driver.get("https://sider.ai/invited?c=3eaf48d0e40b6927a29c5db701b17b56")
         
         # Click vào Register Now & Claim Rewards
         logging.info("Đang tìm nút 'Register Now & Claim Rewards'")
