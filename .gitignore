@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+ENV/
+env.bak/
+venv.bak/
+
+
+# Log files
+*.log
+sider_automation.log
+
+# IDE
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+myenv/
+venv/
+env/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Chrome temp directories
+chrome_temp_*/
+
+# Temporary files
+*.tmp
+*.temp

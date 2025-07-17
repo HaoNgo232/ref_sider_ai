@@ -1,0 +1,10 @@
+# Essential packages for Sider AI automation
+selenium>=4.0.0
+webdriver-manager>=4.0.0
+pyautogui>=0.9.50
+
+# Core dependencies (will be installed automatically with above)
+# urllib3
+# trio
+# trio-websocket
+# requests
